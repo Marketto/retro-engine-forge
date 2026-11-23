@@ -1,0 +1,22 @@
+{
+  "name": "retro-engine-forge",
+  "displayName": "Retro Engine Forge",
+  "version": "0.1.0",
+  "description": "Agents, skills and tools to analyze and fix game engines and prepare contributions that follow the target project's rules",
+  "author": {
+    "name": "Marketto",
+    "url": "https://github.com/Marketto"
+  },
+  "repository": "https://github.com/Marketto/retro-engine-forge",
+  "license": "GPL-3.0-or-later",
+  "skills": [
+    "./.claude/skills/"
+  ],
+  "agents": [
+    "./.claude/agents/engine-analyst.md",
+    "./.claude/agents/disasm-analyst.md",
+    "./.claude/agents/tester.md",
+    "./.claude/agents/rules-reviewer.md",
+    "./.claude/agents/correctness-reviewer.md"
+  ]
+}

@@ -1,0 +1,11 @@
+retro-engine-forge
+Copyright (C) 2026 Marketto and contributors
+Licensed under the GNU General Public License, version 3 or (at your option) any later version (see LICENSE).
+
+Names and trademarks
+- Names of projects and games, when mentioned, belong to their respective owners and are used only to identify them.
+  This toolkit is not affiliated with or endorsed by any project it helps contribute to.
+
+Game data
+- This repository contains no game files, extracted game data or disassembly listings. Users must own the games
+  they analyze and keep game data, disassembly and test outputs private (docs/RULES.md, R23 and R25).

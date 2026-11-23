@@ -1,0 +1,6 @@
+{
+  "permissions": {
+    "allow": ["Bash(npm test:*)", "Bash(node --test:*)", "Bash(node tools/:*)", "Bash(git status:*)", "Bash(git diff:*)", "Bash(git log:*)"]
+  },
+  "enableAllProjectMcpServers": true
+}

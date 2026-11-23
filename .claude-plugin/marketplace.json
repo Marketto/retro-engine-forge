@@ -1,0 +1,8 @@
+{
+  "name": "retro-engine-forge",
+  "owner": { "name": "Marketto" },
+  "description": "Tools to analyze and fix game engines and prepare contributions that follow the target project's rules",
+  "plugins": [
+    { "name": "retro-engine-forge", "source": "./", "description": "Agents, skills, checker and MCP server for game-engine fixes" }
+  ]
+}

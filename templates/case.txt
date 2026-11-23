@@ -1,0 +1,12 @@
+# <id>: one line on the bug and the scene.
+# Expected before: ...
+# Expected after: ...
+# Lines starting with "#@" drive tools/test-commits.sh:
+#@ subject <regex matching the commit title>
+#@ before grep <regex that proves the bug in run.log>
+#@ after grep <regex that proves the fix in run.log>
+#@ after nogrep FATAL|Assertion
+#@ timeout 240
+# Optional: "#@ env NAME=value", "#@ before|after exit <code>", "#@ before|after sh <command run in the output folder>".
+# "#@ manual" marks a case with a part the driver cannot do: it is NOT tested until a human plays it (R17).
+# The rest is the driver script (commands depend on your engine's driver; see driver/README.md).
