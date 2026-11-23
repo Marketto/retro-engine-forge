@@ -8,5 +8,9 @@
 #@ after nogrep FATAL|Assertion
 #@ timeout 240
 # Optional: "#@ env NAME=value", "#@ before|after exit <code>", "#@ before|after sh <command run in the output folder>".
+# "#@ check <kind> <arg>" applies to both sides.
+# "#@ regression" makes the case run on EVERY commit tested: its "#@ check" lines must pass before and after, with the
+#   same driver state (R32).
+#   Write one per scene that runs through shared code, for every game of the engine.
 # "#@ manual" marks a case with a part the driver cannot do: it is NOT tested until a human plays it (R17).
 # The rest is the driver script (commands depend on your engine's driver; see driver/README.md).

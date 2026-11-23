@@ -5,8 +5,8 @@ description: Get a reviewed block of commits ready for a pull request to the tar
 
 # Prepare the PR
 
-1. Confirm: every commit tested in game (R17, `forge test` summary, manual parts played), cards complete (R12, R24),
-   double review closed (R19), AI policy re-read (R0).
+1. Confirm: `forge ready --range <main>..<branch>` says every commit READY (context R30–R31, evidence R12, cards R24,
+   fix tested in game R17, regressions unchanged R32); double review closed (R19); AI policy re-read (R0).
 2. For each commit, show the human the change and the card's "points for the message". **The human** creates or
    rewords the commit (`git commit`, `git rebase -i` with `reword`) with their own message (R2, R3, R29). Do not run
    these for them.

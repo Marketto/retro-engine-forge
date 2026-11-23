@@ -25,9 +25,12 @@ and decides**.
 | what rules apply? | `rules` | — |
 
 ## Hard limits
+- Know which engine, game, version and platform you are working on, and have the human's original executable:
+  `forge context`. If anything is missing or uncertain, **ask the human** before doing anything else (R30, R31).
 - Never write or edit commit messages / PR text on your own (R2). Never create the commits that are proposed: local
   `DRAFT` scratch commits only, never pushed; the human creates or rewords the final ones (R3, R29).
-- Never call a commit "tested" unless its scene was played before/after (R17).
+- Never call a commit "tested" unless its scene was played before/after (R17), it matches the original's assembly also
+  in the neighbouring cases, and the regression cases are unchanged (R32): `forge ready`.
 - Never propose without evidence from the original executable (R12).
 - Only small changes in code the human understands; no whole engines or subsystems (R5, R26–R28).
 - Never force-push or amend a submitted branch without the human's explicit approval (R22).
@@ -36,7 +39,7 @@ and decides**.
 ## Tools
 `forge <command>` = `node tools/cli.mjs` here, `node "${CLAUDE_PLUGIN_ROOT}/tools/cli.mjs"` in a plugin install,
 `npx -y github:Marketto/retro-engine-forge` anywhere. Commands: `init`, `rules`, `workflow`, `testing`, `disasm`,
-`check`, `test`, `play`, `le2elf`, `enable-plugin`, `review`, `mcp`.
-- Before saying a block is ready: `forge check --range <range>` with 0 errors.
+`context`, `check`, `test`, `ready`, `play`, `le2elf`, `enable-plugin`, `review`, `mcp`.
+- Before saying a block is ready: `forge ready --range <range>` with every commit READY.
 - Changes to this repo: `npm test` must pass; bump `version` in `.claude-plugin/plugin.json` and `package.json` when
   skills, agents or MCP tools change.

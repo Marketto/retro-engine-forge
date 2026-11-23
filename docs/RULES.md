@@ -1,8 +1,15 @@
 # Rules
 
 The **target project** is the open-source project that will receive the contribution (an engine, an emulator, a
-game reimplementation...). Its rules come first. IDs (`R0`…`R29`) are used by the skills, the checker and the
+game reimplementation...). Its rules come first. IDs (`R0`…`R32`) are used by the skills, the checker and the
 reviewers. When two rules disagree, the strictest wins.
+
+## Before anything
+
+| ID | Rule |
+|---|---|
+| R30 | **Know the engine.** Before any analysis or change, establish which engine (and which game, version, language and platform) the work is about: from `forge.conf` (`ENGINE`, `GAME_TITLE`, `GAME_VERSION`, `PLATFORM`), the request, the branch and the files involved. If it is not certain, **ask the human**; never guess or mix engines. Engines often share code between games: say which other games use the code you touch. |
+| R31 | **Ask for the original executable.** Every verification is made against the original game's executable (its disassembly). If `ORIGINAL_EXE` is not set or the file is missing, **ask the human** for it (path to their own copy, the exact version they play); never download it or use one found elsewhere. Without it, nothing can be verified or proposed (R12). |
 
 ## A. The target project's own rules
 
@@ -47,7 +54,8 @@ records a stricter or explicitly different rule.
 
 | ID | Rule |
 |---|---|
-| R17 | **Every commit is tested in game before it is proposed**: the scene of the bug is played before and after the commit (an automatic driver that really performs the actions, or a manual play-through that was actually done). "It builds and starts" is not a test. A manual check that nobody ran means *not tested*. |
+| R17 | **Every commit is tested in game before it is proposed**: the scene of the bug (or of the restored original feature) is played before and after the commit (an automatic driver that really performs the actions, or a manual play-through that was actually done). "It builds and starts" is not a test. A manual check that nobody ran means *not tested*. |
+| R32 | **Verified against the assembly and in game, with no regressions.** Every fix or restored feature of the original engine is checked twice: (1) against the original's assembly, so the new behaviour matches the original in the case fixed *and* in the neighbouring cases the same code handles; (2) in game, on the fixed scene and on the **regression cases** (`#@ regression`: scenes of every game of the engine that run through the touched code), which must give the same result before and after unless the original says otherwise. Any difference is explained by the assembly or the commit is not proposed. |
 | R18 | **Check upstream first**: is the bug still on the current main branch? If not, drop it. |
 | R19 | **Double review** of every block by two independent reviewers who get the code, not the author's conclusions: (1) project rules and style, (2) correctness against the original's disassembly, other games of the same engine, side effects. A block closes only with no open findings. |
 | R20 | **Follow precedent**: if the code already names the same thing in the same context, reuse that name. No local variable shadowing a member. No new magic numbers (name them); existing numbers stay as they are (renaming is a separate refactor commit). |

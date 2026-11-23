@@ -8,6 +8,7 @@ import readline from "node:readline";
 import { fileURLToPath } from "node:url";
 import { checkRange, checkMessage, readConf } from "./check-commits.mjs";
 import { init } from "./init.mjs";
+import { context, judge, findCard, readResults } from "./ready.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const read = f => fs.readFileSync(path.join(ROOT, f), "utf8");
@@ -45,6 +46,24 @@ export const TOOLS = [
   { name: "check_message", description: "Checks one commit message (written by the human) against the title/body rules and the project's settings.",
     inputSchema: { type: "object", required: ["message"], properties: { message: { type: "string" }, conf: { type: "string", description: "absolute path of forge.conf (optional)" }, allow_draft: { type: "boolean" } } },
     run: a => { need(a, "message"); return JSON.stringify(checkMessage(a.message, a.conf ? readConf(a.conf) : {}, { allowDraft: !!a.allow_draft }), null, 2); } },
+  { name: "context", description: "Which engine, game, version, platform and original executable the work is about (forge.conf), and the questions to ask the human when something is missing (R30, R31). Call it before any analysis.",
+    inputSchema: { type: "object", required: ["conf"], properties: { conf: { type: "string", description: "absolute path of forge.conf" } } },
+    run: a => { need(a, "conf"); const c = readConf(a.conf); if (!c.__dir) throw new Error(`${a.conf} not found: ask the human which engine, game and executable, then run init_workspace`); return JSON.stringify(context(c), null, 2); } },
+  { name: "ready", description: "Per commit of a range: card with engine and evidence from the original, neighbouring cases, in-game results of the fix and of the regression cases, checker errors (R12, R17, R24, R30-R32). Returns the problems left.",
+    inputSchema: { type: "object", required: ["conf", "range"], properties: { conf: { type: "string", description: "absolute path of forge.conf" }, range: { type: "string" } } },
+    run: a => {
+      need(a, "conf", "range");
+      const c = readConf(a.conf);
+      if (!c.__dir) throw new Error(`${a.conf} not found`);
+      const ctx = context(c);
+      if (ctx.missing.length) return JSON.stringify({ context: ctx, ready: false }, null, 2);
+      const abs = p => (path.isAbsolute(p) ? p : path.join(c.__dir, p));
+      const commits = checkRange({ repo: abs(c.UPSTREAM), range: a.range, conf: c }).map(x => {
+        const problems = judge({ card: findCard(abs(c.CARDS || "cards"), x.sha, x.title), results: readResults(abs(c.OUT || ".forge/tests"), x.sha), findings: x.findings });
+        return { sha: x.sha, title: x.title, ready: !problems.length, problems };
+      });
+      return JSON.stringify({ context: ctx, commits }, null, 2);
+    } },
   { name: "init_workspace", description: "Creates forge.conf, project-rules.md, cases/, cards/ and the PR checklist in a folder (never overwrites).",
     inputSchema: { type: "object", required: ["folder"], properties: { folder: { type: "string", description: "absolute path" } } },
     run: a => { need(a, "folder"); return init(a.folder); } },
@@ -56,15 +75,15 @@ const PROMPTS = [
     text: ({ project }) => `Learn the contribution rules of ${project} with retro-engine-forge (skill learn-project): AI policy, contributing guide, style, commit format, PR template, license, channels. Write project-rules.md with sources and show me where they differ from the toolkit's defaults.` },
   { name: "survey_engine", description: "Find and rank candidate bugs in a game engine of the target project.",
     arguments: [{ name: "engine", description: "engine or module name", required: true }],
-    text: ({ engine }) => `Survey the engine "${engine}" with retro-engine-forge. Read the tools "rules" and "skill" (survey-engine). Give me the ranked table; do not fix anything yet.` },
+    text: ({ engine }) => `Survey the engine "${engine}" with retro-engine-forge. Confirm with me the game, version and platform and ask me for the original executable if you do not have it. Read the tools "rules" and "skill" (survey-engine). Give me the ranked table; do not fix anything yet.` },
   { name: "fix_bug", description: "Take one bug from report to a tested scratch commit, following every rule.",
     arguments: [{ name: "bug", description: "what goes wrong and where", required: true }],
     text: ({ bug }) => `Bug: ${bug}
-Follow retro-engine-forge: tools "rules" and "workflow", then skills investigate-bug, disasm-evidence, minimal-fix, test-in-game.
+Follow retro-engine-forge: first the tool "context" (if the engine, game version or original executable is missing or uncertain, ask me), then "rules" and "workflow", then skills investigate-bug, disasm-evidence, minimal-fix, test-in-game (regression cases included).
 Stop and ask me before writing code if the evidence is unclear. Never write commit messages: local DRAFT scratch commits and points only.` },
   { name: "prepare_pr", description: "Check a block of commits and prepare the PR checklist (the human writes the text and makes the commits).",
     arguments: [{ name: "range", description: "git range of the block", required: true }],
-    text: ({ range }) => `Prepare the commits ${range} for a PR with retro-engine-forge (skill prepare-pr): run check_commits, list what is missing (project rules, tests in game, evidence, review), and give me the points for each message. I make the commits and write the messages and the PR description.` },
+    text: ({ range }) => `Prepare the commits ${range} for a PR with retro-engine-forge (skill prepare-pr): run the tool ready, list what is missing (context, evidence, tests in game, regressions, review), and give me the points for each message. I make the commits and write the messages and the PR description.` },
 ];
 
 const SUPPORTED = ["2025-06-18", "2025-03-26", "2024-11-05"];

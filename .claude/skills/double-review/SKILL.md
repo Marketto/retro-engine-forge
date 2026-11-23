@@ -10,8 +10,9 @@ the commit range, the checkout path, `project-rules.md` and the cards; **do not*
 test results.
 
 - Rules reviewer: R0 (`project-rules.md`), R4–R8, R13, R20, plus `forge check` output.
-- Correctness reviewer: each change against the evidence in its card, shared code paths, other games of the engine,
-  edge cases; flags anything the evidence does not support.
+- Correctness reviewer: each change against the original's assembly (the reviewer reads it in `ORIGINAL_EXE`, not only
+  the card), the other paths of the same routine, shared code used by other games of the engine, the regression results;
+  flags anything the assembly does not support.
 
 Collect findings as `commit | finding | severity | fix`. Apply fixes, rerun the tests (R17) and review the changed
 commits again. The block closes when both reviews have no open findings.

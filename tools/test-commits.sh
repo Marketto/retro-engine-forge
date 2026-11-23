@@ -6,7 +6,8 @@
 # Without case names: the cases whose "#@ subject <regex>" matches the commit title.
 #   test-commits.sh myengine-fixes-1          # every commit of main..myengine-fixes-1
 #   test-commits.sh 1a2b3c4d scroll-left      # one commit, one case
-# Results: $OUT/<hash>/{before,after}/<case>/ and $OUT/summary.txt.
+# Cases with "#@ regression" run on EVERY commit and must give the same result and driver state before and after (R32).
+# Results: $OUT/<hash>/{before,after}/<case>/, $OUT/<hash>/result.txt and $OUT/summary.txt.
 # A case with "#@ manual" is NOT tested until its manual part has been played (rule R17).
 set -u
 . "$(dirname "$0")/forge-lib.sh"
@@ -34,7 +35,7 @@ binary() {
 	echo "$BIN/$c/app"
 }
 
-# check <case> <before|after> <dir>: grep / nogrep (case-insensitive ERE on run.log), exit <code>, sh <command>
+# check <case> <before|after> <dir>: lines "#@ <side> ..." and "#@ check ..." (both sides): grep / nogrep (case-insensitive ERE on run.log), exit <code>, sh <command>
 check() {
 	local case=$1 side=$2 dir=$3 res=OK line kind arg code
 	code=$(sed -n 's/^exit=//p' "$dir/result.txt")
@@ -46,13 +47,35 @@ check() {
 		exit) [ "$code" = "$arg" ] || { res=FAILED; echo "    $side: exit $code instead of $arg"; } ;;
 		sh) ( cd "$dir" && bash -c "$arg" ) >> "$dir/sh.out" 2>&1 || { res=FAILED; echo "    $side: sh failed: $arg"; } ;;
 		esac
-	done < <(sed -n "s/^#@ $side //p" "$case")
+	done < <(sed -n -e "s/^#@ $side //p" -e "s/^#@ check //p" "$case")
 	echo "$res" > "$dir/check.txt"
+}
+
+# run_case <case> <short> <before-bin> <after-bin>: both sides, results in $OUT/<short>/{before,after}/<case>
+run_both() {
+	local case=$1 short=$2 name side b dir to
+	name=$(basename "$case" .txt); to=$(sed -n 's/^#@ timeout //p' "$case")
+	for side in before after; do
+		b=$3; [ $side = after ] && b=$4
+		dir="${OUT:?}/${short:?}/${side:?}/${name:?}"
+		rm -rf "$dir"
+		"$FORGE_TOOLS/run-case.sh" "$case" "$dir" "$b" "${to:-240}"
+		check "$case" $side "$dir"
+	done
+}
+
+# same_state <short> <name>: the driver's state lines ($STATE_LINES) are identical before and after, once the
+# run-dependent parts ($STATE_IGNORE, a sed -E expression: poll counts, timings) are removed
+state_of() { grep -aE "${STATE_LINES:-^AutoTest:}" "$1" | sed -E "${STATE_IGNORE:-s/[0-9]+ ?(polls?|ms|frames?)//g}"; }
+same_state() {
+	diff -q <(state_of "$OUT/$1/before/$2/run.log") <(state_of "$OUT/$1/after/$2/run.log") >/dev/null
 }
 
 SUM=$OUT/summary.txt
 mkdir -p "$OUT"
-echo "# $(date '+%Y-%m-%d %H:%M') test-commits.sh $SEL $*" >> "$SUM"
+REGRESSIONS=()
+for f in "$CASES"/*.txt; do grep -q '^#@ regression' "$f" && REGRESSIONS+=("$f"); done
+echo "# $(date '+%Y-%m-%d %H:%M') test-commits.sh $SEL $* (${#REGRESSIONS[@]} regression cases)" >> "$SUM"
 printf '%-9s %-40s %-26s %-7s %-7s %s\n' commit title case before after result | tee -a "$SUM"
 for c in $COMMITS; do
 	short=$(git -C "$UP" rev-parse --short=8 "$c")
@@ -62,31 +85,45 @@ for c in $COMMITS; do
 		for n in "$@"; do cases+=("$CASES/${n%.txt}.txt"); done
 	else
 		for f in "$CASES"/*.txt; do
+			grep -q '^#@ regression' "$f" && continue
 			re=$(sed -n 's/^#@ subject //p' "$f")
 			[ -n "$re" ] && echo "$title" | grep -Eiq -- "$re" && cases+=("$f")
 		done
 	fi
+	mkdir -p "$OUT/$short"
+	: > "$OUT/$short/result.txt"
 	if [ ${#cases[@]} -eq 0 ]; then
 		printf '%-9s %-40.40s %-26s %-7s %-7s %s\n' "$short" "$title" - - - "NO CASE: not tested" | tee -a "$SUM"
+		echo "fix - - - NO-CASE" >> "$OUT/$short/result.txt"
 		continue
 	fi
 	after=$(binary "$c") || { echo "$short: build failed" | tee -a "$SUM"; continue; }
 	before=$(binary "$(git -C "$UP" rev-parse "$c~1")") || { echo "$short~1: build failed" | tee -a "$SUM"; continue; }
+	# the fix: must fail its "before" checks on the parent and pass its "after" checks on the commit
 	for case in "${cases[@]}"; do
 		name=$(basename "$case" .txt)
 		[ -f "$case" ] || { echo "case $name missing"; continue; }
-		to=$(sed -n 's/^#@ timeout //p' "$case")
-		for side in before after; do
-			b=$before; [ $side = after ] && b=$after
-			dir="${OUT:?}/${short:?}/${side:?}/${name:?}"
-			rm -rf "$dir"
-			"$FORGE_TOOLS/run-case.sh" "$case" "$dir" "$b" "${to:-240}"
-			check "$case" $side "$dir"
-		done
+		run_both "$case" "$short" "$before" "$after"
 		rb=$(cat "$OUT/$short/before/$name/check.txt"); ra=$(cat "$OUT/$short/after/$name/check.txt")
 		res=FAILED; [ "$rb $ra" = "OK OK" ] && res=OK
-		grep -q '^#@ manual' "$case" && res="$res + MANUAL PART PENDING"
+		grep -q '^#@ manual' "$case" && res="$res+MANUAL-PENDING"
+		echo "fix $name $rb $ra $res" >> "$OUT/$short/result.txt"
 		printf '%-9s %-40.40s %-26s %-7s %-7s %s\n' "$short" "$title" "$name" "$rb" "$ra" "$res" | tee -a "$SUM"
 	done
+	# regressions (R32): same checks and same driver state before and after
+	for case in "${REGRESSIONS[@]}"; do
+		name=$(basename "$case" .txt)
+		run_both "$case" "$short" "$before" "$after"
+		rb=$(cat "$OUT/$short/before/$name/check.txt"); ra=$(cat "$OUT/$short/after/$name/check.txt")
+		res=OK
+		if [ "$rb" != OK ] && [ "$ra" != OK ]; then res=BROKEN-CASE
+		elif [ "$ra" != OK ]; then res=REGRESSION
+		elif [ "$rb" != OK ]; then res=CHANGED; fi
+		[ $res = OK ] && ! grep -q '^#@ nocompare' "$case" && ! same_state "$short" "$name" && res=CHANGED
+		echo "regression $name $rb $ra $res" >> "$OUT/$short/result.txt"
+		printf '%-9s %-40.40s %-26s %-7s %-7s %s\n' "$short" "$title" "[r] $name" "$rb" "$ra" "$res" | tee -a "$SUM"
+	done
+	[ ${#REGRESSIONS[@]} -gt 0 ] || echo "regression - - - NONE" >> "$OUT/$short/result.txt"
 done
+echo "CHANGED = checks or driver state differ before/after: explain it with the assembly or treat it as a regression (R32). BROKEN-CASE = fails on both sides: fix the case." | tee -a "$SUM"
 exit 0

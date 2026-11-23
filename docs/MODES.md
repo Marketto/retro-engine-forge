@@ -58,8 +58,8 @@ npx -y github:Marketto/retro-engine-forge le2elf GAME.EXE game.elf
 ```json
 { "mcpServers": { "retro-engine-forge": { "command": "npx", "args": ["-y", "github:Marketto/retro-engine-forge", "mcp"] } } }
 ```
-Tools: `rules`, `workflow`, `skill`, `testing_guide`, `disassembly_guide`, `templates`, `check_commits`,
-`check_message`, `init_workspace`. Prompts: `learn_project`, `survey_engine`, `fix_bug`, `prepare_pr`.
+Tools: `context`, `rules`, `workflow`, `skill`, `testing_guide`, `disassembly_guide`, `templates`, `check_commits`,
+`check_message`, `ready`, `init_workspace`. Prompts: `learn_project`, `survey_engine`, `fix_bug`, `prepare_pr`.
 
 ## 8. One-line prompt
 ```

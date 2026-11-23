@@ -1,7 +1,7 @@
 {
   "name": "retro-engine-forge",
   "displayName": "Retro Engine Forge",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Agents, skills and tools to analyze and fix game engines and prepare contributions that follow the target project's rules",
   "author": {
     "name": "Marketto",

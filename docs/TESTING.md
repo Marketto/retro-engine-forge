@@ -18,6 +18,16 @@ A case (`templates/case.txt`) is a driver script plus `#@` lines: `subject` (whi
 `before`/`after` checks (`grep`, `nogrep`, `exit`, `sh`), `timeout`, `env`. A good case **fails on the parent and
 passes on the commit**: a case that passes on both proves nothing.
 
+## Regression cases (R32)
+
+A case with `#@ regression` (and no `subject`) runs on **every** commit tested. Its `#@ check` lines (both sides) must
+pass before and after with the **same driver state** (`AutoTest:` lines): otherwise `REGRESSION` (broken by the commit),
+`CHANGED` (different) or `BROKEN-CASE` (fails on both sides: the case is wrong). Write
+one for each scene, in every game of the engine, that runs through the code your fixes touch. A `CHANGED` is accepted
+only when the original's assembly explains it (in the card); `STATE_LINES` and `STATE_IGNORE` in `forge.conf` choose the driver lines compared and
+remove run-dependent parts (poll counts, timings); `#@ nocompare` skips the comparison for scenes that are not
+deterministic. `forge ready` refuses a commit with no regression cases.
+
 ## Running
 
 ```bash

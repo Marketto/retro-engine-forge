@@ -5,6 +5,7 @@ description: Write the smallest change that reproduces the original game's behav
 
 # Minimal fix
 
+0. `forge context` asks nothing (R30, R31); the evidence (skill `disasm-evidence`) is in hand.
 1. Branch from the project's main branch (R14): `<module>-fixes-<n>`; one logical change per commit (R13).
 2. Code: the smallest change; reuse existing names (R20); only constructs the project allows (R7, `project-rules.md`);
    its formatting (R6); comment only what is not obvious, one or two short lines (R4). No unrelated reformatting.

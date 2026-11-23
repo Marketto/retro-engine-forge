@@ -5,7 +5,12 @@ description: Learn a target open-source project's rules before contributing - AI
 
 # Learn the target project (R0)
 
-In the project's checkout and website:
+First, the context (R30, R31): which engine, which game, version, language and platform, which other games share the
+engine, and where the human's own copy of the original executable is. Take them from the request and `forge.conf`;
+**ask the human** for anything missing or uncertain, then fill `ENGINE`, `GAME_TITLE`, `GAME_VERSION`, `PLATFORM`,
+`OTHER_GAMES`, `ORIGINAL_EXE` and run `forge context` until it asks nothing.
+
+Then, in the project's checkout and website:
 1. **Policies**: AI policy (e.g. `AI-GUIDELINES.md`, `AI_POLICY.md`, a section of `CONTRIBUTING.md`), contributing guide,
    code of conduct, PR template (`.github/pull_request_template.md`), issue templates, license and header of source files.
 2. **Style**: `.clang-format`, `.editorconfig`, linters, style guide pages (wiki pages may block automated readers: ask

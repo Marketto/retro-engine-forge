@@ -30,7 +30,7 @@ test("initialize, list tools and prompts, read rules", async () => {
   ]);
   assert.equal(init.result.serverInfo.name, "retro-engine-forge");
   const names = tools.result.tools.map(t => t.name);
-  for (const n of ["rules", "workflow", "skill", "check_commits", "check_message", "templates"]) assert.ok(names.includes(n), n);
+  for (const n of ["rules", "workflow", "skill", "check_commits", "check_message", "templates", "context", "ready"]) assert.ok(names.includes(n), n);
   assert.ok(prompts.result.prompts.length >= 3);
   assert.match(rules.result.content[0].text, /R17/);
 });

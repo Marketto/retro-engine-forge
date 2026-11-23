@@ -1,15 +1,19 @@
 {
   "name": "retro-engine-forge",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "description": "Agentic toolkit to analyze and fix game engines and prepare contributions that follow the target project's rules",
   "license": "GPL-3.0-or-later",
-  "bin": { "retro-engine-forge": "tools/cli.mjs" },
+  "bin": {
+    "retro-engine-forge": "tools/cli.mjs"
+  },
   "scripts": {
     "test": "node --test tests/*.test.mjs",
     "check": "node tools/check-commits.mjs",
     "mcp": "node tools/mcp-server.mjs"
   },
-  "engines": { "node": ">=20" }
+  "engines": {
+    "node": ">=20"
+  }
 }
